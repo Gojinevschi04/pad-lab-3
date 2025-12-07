@@ -6,7 +6,7 @@ import sys
 
 from tickets.otel import configure_otel
 
-configure_otel()
+# configure_otel()
 
 
 def main() -> None:

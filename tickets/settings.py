@@ -164,9 +164,12 @@ WSGI_APPLICATION = "tickets.wsgi.application"
 REST_FRAMEWORK = {
     "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%SZ",
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "tickets.authentication.OpenIDAuthentication",
+        # "tickets.authentication.OpenIDAuthentication",
     ],
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_PERMISSION_CLASSES":
+        (
+            # "rest_framework.permissions.IsAuthenticated",
+        ),
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
