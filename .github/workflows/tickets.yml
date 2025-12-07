@@ -12,7 +12,6 @@ on:
         - 'tickets/**'
         - '.github/workflows/tickets.yml'
 
-
 jobs:
     test-coverage:
         runs-on: ubuntu-latest
