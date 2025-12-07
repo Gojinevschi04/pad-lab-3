@@ -12,8 +12,8 @@ x-tickets-common: &tickets-common
     #            condition: service_completed_successfully
     redis:
       condition: service_healthy
-  #        tickets-db:
-  #            condition: service_healthy
+    tickets-db:
+        condition: service_healthy
   volumes:
     - ./trips.json:/app/trips.json # only for json backend test - to do - remove it later
   environment:
