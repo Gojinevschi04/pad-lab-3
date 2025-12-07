@@ -49,25 +49,6 @@ x-tickets-common: &tickets-common
         - TREASURY_API_URL=http://treasury-api:8001/api
         - TREASURY_API_KEY=treasury-key
 
-x-authentik-common: &authentik-common
-    image: ghcr.io/goauthentik/server:2025.6.4
-    restart: unless-stopped
-    environment:
-        AUTHENTIK_SECRET_KEY: my-secret-key
-        AUTHENTIK_REDIS__HOST: redis
-        AUTHENTIK_BOOTSTRAP_EMAIL: ana.gojinevschi@ebs-integrator.com
-        AUTHENTIK_BOOTSTRAP_PASSWORD: admin
-        AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
-        AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authentik}
-        AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
-        AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASS:-authentik}
-    depends_on:
-        authentik-postgresql:
-            condition: service_healthy
-        redis:
-            condition: service_healthy
-    networks:
-        - public
 
 services:
     tickets-api:
@@ -140,16 +121,6 @@ services:
         networks:
             - backend
 
-    tickets-jaeger:
-        image: jaegertracing/all-in-one:latest
-        command: [ "--collector.zipkin.host-port=:9411" ]
-        ports:
-            - "16686:16686"
-            - "14268:14268"
-            - "9411:9411"
-        networks:
-            - public
-
     tickets-minio:
         image: quay.io/minio/minio:latest
         command: server /data --console-address ":9001"
@@ -212,44 +183,6 @@ services:
         networks:
             - public
 
-    authentik-postgresql:
-        image: docker.io/library/postgres:16-alpine
-        restart: unless-stopped
-        healthcheck:
-            test: [ "CMD-SHELL", "pg_isready -d authentik -U authentik" ]
-            start_period: 2s
-            start_interval: 2s
-            interval: 30s
-            retries: 5
-            timeout: 5s
-        volumes:
-            - authentik-postgresql-data:/var/lib/postgresql/data
-        environment:
-            POSTGRES_PASSWORD: ${PG_PASS:-authentik}
-            POSTGRES_USER: ${PG_USER:-authentik}
-            POSTGRES_DB: ${PG_DB:-authentik}
-        networks:
-            - public
-
-    authentik-server:
-        <<: *authentik-common
-        command: server
-        volumes:
-            - ./deployment/compose/tickets-provider.yaml:/blueprints/tickets-provider.yaml
-        ports:
-            - "${COMPOSE_PORT_HTTP:-80}:9000"
-            - "${COMPOSE_PORT_HTTPS:-443}:9443"
-
-    authentik-worker:
-        <<: *authentik-common
-        command: worker
-        user: root
-        volumes:
-            - ./deployment/compose/tickets-provider.yaml:/blueprints/tickets-provider.yaml
-            - /var/run/docker.sock:/var/run/docker.sock
-        networks:
-            - public
-
 networks:
     public:
         driver: bridge
@@ -262,4 +195,3 @@ volumes:
     tickets-db-data:
     tickets-minio-data:
     redis-data:
-    authentik-postgresql-data:
