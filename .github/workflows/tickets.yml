@@ -3,14 +3,14 @@ name: Tickets CI
 on:
     pull_request:
         paths:
-            - '../../tickets/tickets/**'
+            - '../tickets/tickets/**'
             - 'shared/**'
             - '.github/workflows/tickets.yml'
     push:
       branches:
         - '**'
       paths:
-        - '../../tickets/tickets/**'
+        - '../tickets/tickets/**'
         - 'shared/**'
         - '.github/workflows/tickets.yml'
 
@@ -26,7 +26,7 @@ jobs:
 
         defaults:
             run:
-                working-directory: pad-lab-3/tickets
+                working-directory: tickets
 
         steps:
             -   name: Checkout code
