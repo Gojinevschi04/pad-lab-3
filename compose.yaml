@@ -121,41 +121,41 @@ services:
     networks:
       - backend
 
-  tickets-minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - tickets-minio-data:/data
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/ready" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
-    networks:
-      - backend
-      - public
-
-  tickets-minio-setup:
-    image: minio/mc:latest
-    depends_on:
-      tickets-minio:
-        condition: service_healthy
-    entrypoint: >
-      sh -c "
-        mc alias set s3minio http://tickets-minio:9000 minioadmin minioadmin &&
-        mc mb s3minio/tickets-files --ignore-existing &&
-        mc anonymous set public s3minio/tickets-files &&
-        mc version enable s3minio/tickets-files
-      "
-    networks:
-      - backend
+#  tickets-minio:
+#    image: minio/minio:latest
+#    command: server /data --console-address ":9001"
+#    environment:
+#      MINIO_ROOT_USER: minioadmin
+#      MINIO_ROOT_PASSWORD: minioadmin
+#    ports:
+#      - "9000:9000"
+#      - "9001:9001"
+#    volumes:
+#      - tickets-minio-data:/data
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/ready" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 5s
+#    networks:
+#      - backend
+#      - public
+#
+#  tickets-minio-setup:
+#    image: minio/mc:latest
+#    depends_on:
+#      tickets-minio:
+#        condition: service_healthy
+#    entrypoint: >
+#      sh -c "
+#        mc alias set s3minio http://tickets-minio:9000 minioadmin minioadmin &&
+#        mc mb s3minio/tickets-files --ignore-existing &&
+#        mc anonymous set public s3minio/tickets-files &&
+#        mc version enable s3minio/tickets-files
+#      "
+#    networks:
+#      - backend
 
   redis:
     image: docker.io/library/redis:alpine
