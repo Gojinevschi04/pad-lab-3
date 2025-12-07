@@ -6,10 +6,10 @@ x-tickets-common: &tickets-common
     - public
     - backend
   depends_on: &tickets-depends-on
-    #        tickets-minio:
-    #            condition: service_healthy
-    #        tickets-minio-setup:
-    #            condition: service_completed_successfully
+    tickets-minio:
+        condition: service_healthy
+    tickets-minio-setup:
+        condition: service_completed_successfully
     redis:
       condition: service_healthy
     tickets-db:
