@@ -258,12 +258,12 @@ DEPOT_API_URL = env("DEPOT_API_URL", default="http://depot-service:8000/api")
 DEPOT_API_TIMEOUT = env("TREASURY_API_TIMEOUT", default=10)
 
 DEPOT = {
-    "backend": "tickets.depot.backends.json.JsonDepotBackend",
-    # "backend": "tickets.depot.back/ends.service.DepotServiceBackend",
-    # "options": {
-    #     "base_url": DEPOT_API_URL,
-    #     "timeout": DEPOT_API_TIMEOUT,
-    # },
+    # "backend": "tickets.depot.backends.json.JsonDepotBackend",
+    "backend": "tickets.depot.backends.service.DepotServiceBackend",
+    "options": {
+        "base_url": DEPOT_API_URL,
+        "timeout": DEPOT_API_TIMEOUT,
+    },
 }
 
 TREASURY_API_URL = env("TREASURY_API_URL", default="http://treasury-api:8001/api")
