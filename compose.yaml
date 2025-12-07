@@ -1,0 +1,265 @@
+x-tickets-common: &tickets-common
+    build:
+        context: .
+        dockerfile: deployment/docker/Dockerfile
+    networks:
+        - public
+        - backend
+    depends_on: &tickets-depends-on
+        tickets-minio:
+            condition: service_healthy
+        tickets-minio-setup:
+            condition: service_completed_successfully
+        redis:
+            condition: service_healthy
+        tickets-db:
+            condition: service_healthy
+    volumes:
+        - ./trips.json:/app/trips.json # only for json backend test - to do - remove it later
+    environment:
+        - DJANGO_SETTINGS_MODULE=tickets.settings
+        - DJANGO_SUPERUSER_USERNAME=admin
+        - DJANGO_SUPERUSER_EMAIL=admin@tickets.localhost
+        - DJANGO_SUPERUSER_PASSWORD=admin
+        - PYTHONPATH=/app
+        - DEBUG="True"
+        - ALLOWED_HOSTS=127.0.0.1,localhost,tickets.localhost
+        - CSRF_TRUSTED_ORIGINS=https://tickets.localhost:8443
+        - ZIPKIN_ENDPOINT=http://tickets-jaeger:9411/api/v2/spans/
+        - POSTGRES_DB=postgres
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres
+        - POSTGRES_HOST=tickets-db
+        - POSTGRES_PORT=5432
+        - CELERY_BROKER_URL=redis://redis:6379/1
+        - CELERY_RESULT_BACKEND=redis://redis:6379/1
+        - CELERY_ACCEPT_CONTENT=json
+        - CELERY_TASK_SERIALIZER=json
+        - CELERY_RESULT_SERIALIZER=json
+        - CELERY_TIMEZONE=UTC
+        - OAUTH2_JWKS_URL=http://authentik-server:9000/application/o/tickets-app/jwks/
+        - OAUTH2_AUTHORIZATION_URL=http://localhost/application/o/authorize/
+        - OAUTH2_TOKEN_URL=http://localhost/application/o/token/
+        - OAUTH2_REDIRECT_URL=https://tickets.localhost:8443/api/oauth2-redirect.html
+        - MINIO_ROOT_USER=minioadmin
+        - MINIO_ROOT_PASSWORD=minioadmin
+        - MINIO_ENDPOINT=http://tickets-minio:9000
+        - AWS_S3_CUSTOM_DOMAIN=localhost:9000/tickets-files
+        - DEPOT_API_URL=http://depot-service:8000/api
+        - TREASURY_API_URL=http://treasury-api:8001/api
+        - TREASURY_API_KEY=treasury-key
+
+x-authentik-common: &authentik-common
+    image: ghcr.io/goauthentik/server:2025.6.4
+    restart: unless-stopped
+    environment:
+        AUTHENTIK_SECRET_KEY: my-secret-key
+        AUTHENTIK_REDIS__HOST: redis
+        AUTHENTIK_BOOTSTRAP_EMAIL: ana.gojinevschi@ebs-integrator.com
+        AUTHENTIK_BOOTSTRAP_PASSWORD: admin
+        AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
+        AUTHENTIK_POSTGRESQL__USER: ${PG_USER:-authentik}
+        AUTHENTIK_POSTGRESQL__NAME: ${PG_DB:-authentik}
+        AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASS:-authentik}
+    depends_on:
+        authentik-postgresql:
+            condition: service_healthy
+        redis:
+            condition: service_healthy
+    networks:
+        - public
+
+services:
+    tickets-api:
+        <<: *tickets-common
+        command: >
+            sh -c "python -m tickets runserver 0.0.0.0:8000"
+        labels:
+            - caddy=tickets.localhost
+            - caddy.reverse_proxy=tickets-api:8000
+            - caddy.tls=internal
+        ports:
+            - "8000:8000"
+        restart: unless-stopped
+
+    tickets-celery-worker:
+        <<: *tickets-common
+        depends_on:
+            <<: *tickets-depends-on
+            tickets-api:
+                condition: service_healthy
+        command: celery -A tickets worker --loglevel=info
+
+    tickets-celery-beat:
+        <<: *tickets-common
+        depends_on:
+            <<: *tickets-depends-on
+            tickets-api:
+                condition: service_healthy
+        command: celery -A tickets beat -l info
+
+    tickets-flower:
+        <<: *tickets-common
+        command: celery -A tickets flower
+        depends_on:
+            <<: *tickets-depends-on
+            tickets-api:
+                condition: service_healthy
+        ports:
+            - "${FLOWER_PORT:-5555}:5555"
+
+    tickets-test:
+        <<: *tickets-common
+        build:
+            context: .
+            dockerfile: deployment/docker/Dockerfile
+            target: testing
+        volumes:
+            - ./reports:/app/reports
+        command: ./run-tests.sh
+        networks:
+            - backend
+
+    tickets-db:
+        image: postgres:latest
+        ports:
+            - "5432:5432"
+        environment:
+            - POSTGRES_DB=postgres
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+        volumes:
+            - tickets-db-data:/var/lib/postgresql/data
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+            start_interval: 2s
+            start_period: 2s
+            interval: 30s
+            timeout: 10s
+            retries: 5
+        networks:
+            - backend
+
+    tickets-jaeger:
+        image: jaegertracing/all-in-one:latest
+        command: [ "--collector.zipkin.host-port=:9411" ]
+        ports:
+            - "16686:16686"
+            - "14268:14268"
+            - "9411:9411"
+        networks:
+            - public
+
+    tickets-minio:
+        image: quay.io/minio/minio:latest
+        command: server /data --console-address ":9001"
+        ports:
+            - "9000:9000"
+            - "9001:9001"
+        environment:
+            - MINIO_ROOT_USER=minioadmin
+            - MINIO_ROOT_PASSWORD=minioadmin
+        volumes:
+            - tickets-minio-data:/data
+        healthcheck:
+            test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/ready" ]
+            start_interval: 2s
+            start_period: 2s
+            interval: 10s
+            timeout: 5s
+            retries: 3
+        networks:
+            - backend
+            - public
+
+    tickets-minio-setup:
+        image: minio/mc:latest
+        labels: [ "one-off" ]
+        environment:
+            - MINIO_ROOT_USER=${MINIO_USER:-minioadmin}
+            - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD:-minioadmin}
+            - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-minioadmin}
+            - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-minioadmin}
+        depends_on:
+            tickets-minio:
+                condition: service_healthy
+        entrypoint: >
+            sh -c "
+            until mc alias set s3minio http://tickets-minio:9000 minioadmin minioadmin; do
+                sleep 1
+            done &&
+                mc mb s3minio/tickets-files --ignore-existing &&
+                mc anonymous set public s3minio/tickets-files &&
+                mc version enable s3minio/tickets-files"
+        networks:
+            - backend
+
+    redis:
+        image: docker.io/library/redis:alpine
+        command: --save 60 1 --loglevel warning
+        restart: unless-stopped
+        ports:
+            - "6379:6379"
+        healthcheck:
+            test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+            start_period: 2s
+            start_interval: 2s
+            interval: 30s
+            retries: 5
+            timeout: 3s
+        volumes:
+            - redis-data:/data
+        networks:
+            - public
+
+    authentik-postgresql:
+        image: docker.io/library/postgres:16-alpine
+        restart: unless-stopped
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready -d authentik -U authentik" ]
+            start_period: 2s
+            start_interval: 2s
+            interval: 30s
+            retries: 5
+            timeout: 5s
+        volumes:
+            - authentik-postgresql-data:/var/lib/postgresql/data
+        environment:
+            POSTGRES_PASSWORD: ${PG_PASS:-authentik}
+            POSTGRES_USER: ${PG_USER:-authentik}
+            POSTGRES_DB: ${PG_DB:-authentik}
+        networks:
+            - public
+
+    authentik-server:
+        <<: *authentik-common
+        command: server
+        volumes:
+            - ./deployment/compose/tickets-provider.yaml:/blueprints/tickets-provider.yaml
+        ports:
+            - "${COMPOSE_PORT_HTTP:-80}:9000"
+            - "${COMPOSE_PORT_HTTPS:-443}:9443"
+
+    authentik-worker:
+        <<: *authentik-common
+        command: worker
+        user: root
+        volumes:
+            - ./deployment/compose/tickets-provider.yaml:/blueprints/tickets-provider.yaml
+            - /var/run/docker.sock:/var/run/docker.sock
+        networks:
+            - public
+
+networks:
+    public:
+        driver: bridge
+        # only to communicate with other apis
+#        external: true
+    backend:
+        driver: bridge
+
+volumes:
+    tickets-db-data:
+    tickets-minio-data:
+    redis-data:
+    authentik-postgresql-data:

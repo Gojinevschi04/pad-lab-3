@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .content {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        .highlight {
+            color: #c00;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="content">
+    <h2>Hello, {{ user_name }}!</h2>
+    <p class="highlight">We’re sorry to inform you that your trip <strong>{{ trip_id }}</strong> has been cancelled.</p>
+
+    <p>
+        Trip details:<br>
+        <strong>{{ trip_from }}</strong> → <strong>{{ trip_to }}</strong><br>
+        Date: {{ trip_date }}<br>
+        Time: {{ trip_time }}
+    </p>
+
+    <p>We apologize for the inconvenience and hope to see you on another trip soon.</p>
+</div>
+<div class="footer">
+    &copy; 2025 EBSalocity
+</div>
+</body>
+</html>

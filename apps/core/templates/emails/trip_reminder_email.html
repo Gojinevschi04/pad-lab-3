@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .content {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+<div class="content">
+    <p>Dear {{ user_name }},</p>
+    <p>This is a reminder that your trip is scheduled for:</p>
+    <ul>
+        <li><strong>Date:</strong> {{ trip_date }}</li>
+        <li><strong>Time:</strong> {{ trip_time }}</li>
+        <li><strong>From:</strong> {{ trip_from }}</li>
+        <li><strong>To:</strong> {{ trip_to }}</li>
+    </ul>
+    <p>Safe travels!</p>
+    <p>— The Tickets Team</p>
+</div>
+<div class="footer">
+    &copy; 2025 EBSalocity
+</div>
+</body>
+</html>

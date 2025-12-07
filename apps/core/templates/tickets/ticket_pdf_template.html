@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+
+        h1 {
+            color: #003366;
+        }
+
+        .ticket-box {
+            border: 2px solid #003366;
+            padding: 20px;
+            max-width: 500px;
+        }
+
+        .footer {
+            font-size: 10px;
+            color: grey;
+            margin-top: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="ticket-box">
+    <h1>Ticket #{{ ticket.id }}</h1>
+    <p>Trip number: {{ trip.trip_nr }}</p>
+    <p>Route: {{ trip.route_name }}</p>
+    <p>From: {{ trip.from_city }}</p>
+    <p>To: {{ trip.to_city }}</p>
+    <p>Date: {{ trip.date }}</p>
+    <p>Departure: {{ trip.start_time }}</p>
+    <p>Arrival: {{ trip.end_time }}</p>
+    <p>Bus: {{ trip.bus_model }} ({{ trip.bus_plate_number }})</p>
+    <p>Seat number: {{ ticket.seat_number }}</p>
+    <p>Price: {{ ticket.price }}</p>
+</div>
+<div class="footer">Thank you for your purchase!</div>
+</body>
+</html>

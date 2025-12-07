@@ -1,0 +1,92 @@
+{
+    "trips": [
+        {
+            "id": 1,
+            "schedule": {
+                "id": 1,
+                "route": {
+                    "id": 1,
+                    "name": "Chisinau-Hincesti"
+                },
+                "bus": {
+                    "id": 1,
+                    "driver": {
+                        "id": 1,
+                        "status": "sănătos",
+                        "name": "Vasiliy Bombilo",
+                        "phone_number": "+37377777777",
+                        "employee_id": "EMP-EN7JGS"
+                    },
+                    "fuel": "motorină",
+                    "model": "Tesla Model X",
+                    "plate_number": "BMW 777",
+                    "color": "black",
+                    "capacity": 52,
+                    "status": "ready"
+                },
+                "day_of_week": "luni",
+                "direction": "dus",
+                "start_time": "08:00:00",
+                "end_time": "09:00:00"
+            },
+            "status": "planificat",
+            "price": 33.0,
+            "from_station": {
+                "city": "Ialoveni",
+                "address": "Alex Winner, 95"
+            },
+            "departure_time": null,
+            "to_station": {
+                "city": "Hincesti",
+                "street": "bd. Stefan cel Mare, 25"
+            },
+            "arrival_time": null,
+            "date": "2025-07-21",
+            "trip_nr": "C6FMYTIM2LWPLT"
+        },
+        {
+            "id": 2,
+            "schedule": {
+                "id": 1,
+                "route": {
+                    "id": 1,
+                    "name": "Chisinau-Hincesti"
+                },
+                "bus": {
+                    "id": 1,
+                    "driver": {
+                        "id": 1,
+                        "status": "sănătos",
+                        "name": "Vasiliy Bombilo",
+                        "phone_number": "+37377777777",
+                        "employee_id": "EMP-EN7JGS"
+                    },
+                    "fuel": "motorină",
+                    "model": "Tesla Model X",
+                    "plate_number": "BMW 777",
+                    "color": "black",
+                    "capacity": 52,
+                    "status": "ready"
+                },
+                "day_of_week": "luni",
+                "direction": "dus",
+                "start_time": "08:00:00",
+                "end_time": "09:00:00"
+            },
+            "status": "planificat",
+            "price": 33.0,
+            "from_station": {
+                "city": "Ialoveni",
+                "address": "Alex Winner, 95"
+            },
+            "departure_time": null,
+            "to_station": {
+                "city": "Hincesti",
+                "street": "bd. Stefan cel Mare, 25"
+            },
+            "arrival_time": null,
+            "date": "2025-07-21",
+            "trip_nr": "C6FMYTIM2LWPLT"
+        }
+    ]
+}
