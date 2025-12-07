@@ -4,16 +4,13 @@ on:
     pull_request:
         paths:
             - 'tickets/**'
-            - 'shared/**'
             - '.github/workflows/tickets.yml'
     push:
       branches:
         - '**'
       paths:
         - 'tickets/**'
-        - 'shared/**'
         - '.github/workflows/tickets.yml'
-
 
 jobs:
     test-coverage:
