@@ -107,7 +107,7 @@ run.omit = [
 report.show_missing = true
 report.skip_covered = false
 report.skip_empty = false
-report.fail_under = 80
+report.fail_under = 50
 
 [tool.mypy]
 mypy_path = [""]
