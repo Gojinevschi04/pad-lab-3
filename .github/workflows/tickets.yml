@@ -3,14 +3,14 @@ name: Tickets CI
 on:
     pull_request:
         paths:
-            - '../tickets/tickets/**'
+            - 'tickets/**'
             - 'shared/**'
             - '.github/workflows/tickets.yml'
     push:
       branches:
         - '**'
       paths:
-        - '../tickets/tickets/**'
+        - 'tickets/**'
         - 'shared/**'
         - '.github/workflows/tickets.yml'
 
