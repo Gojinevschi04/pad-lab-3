@@ -119,7 +119,7 @@ stages:
               tags: $(imageTag)
               buildContext: '.'
               arguments: '--target runtime'
-              containerRegistry: TicketsPADRegistry
+              containerRegistry: TicketsDocker
 
           # Pas 3: Actualizarea Azure Container App (Deployment) - RAMANE LA FEL
           - task: AzureCLI@2
