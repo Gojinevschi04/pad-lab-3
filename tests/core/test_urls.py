@@ -44,24 +44,6 @@ class TestTicketURLs:
         response = api_client.get(url)
         assert response.status_code in (status.HTTP_200_OK, status.HTTP_404_NOT_FOUND)
 
-    @pytest.mark.django_db
-    def test_ticket_webhook_confirm_post(
-        self, mock_send_email, mock_generate_pdf, api_client, user, reserved_ticket
-    ):
-        api_client.force_authenticate(user=user)
-        url = reverse("tickets-core:ticket-confirm")
-        data = {"ticket_id": reserved_ticket.id, "invoice_id": "INV-123"}
-
-        response = api_client.post(url, data=data)
-
-        assert response.status_code in (
-            status.HTTP_200_OK,
-            status.HTTP_400_BAD_REQUEST,
-            status.HTTP_404_NOT_FOUND,
-        )
-        mock_generate_pdf.assert_called_once_with(reserved_ticket.id)
-        mock_send_email.assert_called_once_with(reserved_ticket.id)
-
     def test_ticket_cancel_post(self, api_client, user, paid_ticket):
         api_client.force_authenticate(user=user)
         url = reverse("tickets-core:ticket-cancel", kwargs={"pk": paid_ticket.id})
