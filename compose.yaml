@@ -7,7 +7,7 @@ x-tickets-common: &tickets-common
     - backend
   depends_on: &tickets-depends-on
     tickets-db:
-        condition: service_healthy
+      condition: service_healthy
   volumes:
     - ./trips.json:/app/trips.json # only for json backend test - to do - remove it later
   environment:
@@ -55,24 +55,24 @@ services:
       - backend
 
   tickets-db:
-      image: postgres:17
-      ports:
-        - "5432:5432"
-      environment:
-        - POSTGRES_DB=postgres
-        - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=postgres
-      volumes:
-        - tickets-db-data:/var/lib/postgresql/data
-      healthcheck:
-        test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-        start_interval: 2s
-        start_period: 2s
-        interval: 30s
-        timeout: 10s
-        retries: 5
-      networks:
-        - backend
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - tickets-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      start_interval: 2s
+      start_period: 2s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - backend
 
 networks:
   public:
