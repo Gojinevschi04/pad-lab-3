@@ -8,8 +8,6 @@ x-tickets-common: &tickets-common
   depends_on: &tickets-depends-on
     tickets-db:
       condition: service_healthy
-  volumes:
-    - ./trips.json:/app/trips.json # only for json backend test - to do - remove it later
   environment:
     - DJANGO_SETTINGS_MODULE=tickets.settings
     - DJANGO_SUPERUSER_USERNAME=admin
@@ -21,13 +19,12 @@ x-tickets-common: &tickets-common
     - CSRF_TRUSTED_ORIGINS=https://tickets.localhost:8443
     - POSTGRES_DB=postgres
     - POFSTGRES_USER=postgres
-    - POSTGRES_PASSWORD=Test123Q
+    - POSTGRES_PASSWORD=Test123!
     - POSTGRES_HOST=tickets-db
     - POSTGRES_PORT=1433
     - DEPOT_API_URL=http://depot-service:8000/api
     - TREASURY_API_URL=http://treasury-api:8001/api
     - TREASURY_API_KEY=treasury-key
-
 
 services:
   tickets-api:

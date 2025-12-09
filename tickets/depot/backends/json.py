@@ -7,30 +7,112 @@ from tickets.depot.backends.base import BaseBackend
 from tickets.depot.backends.client import DepotClient
 from tickets.depot.utils import generate_seat_status
 
+trips = {
+    "trips": [
+        {
+            "id": 1,
+            "schedule": {
+                "id": 1,
+                "route": {
+                    "id": 1,
+                    "name": "Chisinau-Hincesti"
+                },
+                "bus": {
+                    "id": 1,
+                    "driver": {
+                        "id": 1,
+                        "status": "sănătos",
+                        "name": "Vasiliy Bombilo",
+                        "phone_number": "+37377777777",
+                        "employee_id": "EMP-EN7JGS"
+                    },
+                    "fuel": "motorină",
+                    "model": "Tesla Model X",
+                    "plate_number": "BMW 777",
+                    "color": "black",
+                    "capacity": 52,
+                    "status": "ready"
+                },
+                "day_of_week": "luni",
+                "direction": "dus",
+                "start_time": "08:00:00",
+                "end_time": "09:00:00"
+            },
+            "status": "planificat",
+            "price": 33.0,
+            "from_station": {
+                "city": "Ialoveni",
+                "address": "Alex Winner, 95"
+            },
+            "departure_time": None,
+            "to_station": {
+                "city": "Hincesti",
+                "street": "bd. Stefan cel Mare, 25"
+            },
+            "arrival_time": None,
+            "date": "2025-07-21",
+            "trip_nr": "C6FMYTIM2LWPLT"
+        },
+        {
+            "id": 2,
+            "schedule": {
+                "id": 1,
+                "route": {
+                    "id": 1,
+                    "name": "Chisinau-Hincesti"
+                },
+                "bus": {
+                    "id": 1,
+                    "driver": {
+                        "id": 1,
+                        "status": "sănătos",
+                        "name": "Vasiliy Bombilo",
+                        "phone_number": "+37377777777",
+                        "employee_id": "EMP-EN7JGS"
+                    },
+                    "fuel": "motorină",
+                    "model": "Tesla Model X",
+                    "plate_number": "BMW 777",
+                    "color": "black",
+                    "capacity": 52,
+                    "status": "ready"
+                },
+                "day_of_week": "luni",
+                "direction": "dus",
+                "start_time": "08:00:00",
+                "end_time": "09:00:00"
+            },
+            "status": "planificat",
+            "price": 33.0,
+            "from_station": {
+                "city": "Ialoveni",
+                "address": "Alex Winner, 95"
+            },
+            "departure_time": None,
+            "to_station": {
+                "city": "Hincesti",
+                "street": "bd. Stefan cel Mare, 25"
+            },
+            "arrival_time": None,
+            "date": "2025-07-21",
+            "trip_nr": "C6FMYTIM2LWPLT"
+        }
+    ]
+}
+
 
 class JsonDepotBackend(BaseBackend):
-    def __init__(self, client: DepotClient, file_path: str = "trips.json"):
+    def __init__(self, client: DepotClient):
         super().__init__()
         self.client = client
-        self.file_path = Path(settings.BASE_DIR) / file_path
-        self.data = self._load_json(self.file_path)
+        self.data = self._load_json()
 
         self.trips = self.data.get("trips", [])
         if not isinstance(self.trips, list):
             raise ValueError("Expected 'trips' to be a list")
 
-    def _load_json(self, path: Path) -> dict:
-        try:
-            with path.open(encoding="utf-8") as f:
-                data = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"JSON file not found: {path}")
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in file {path}: {e}")
-
-        if not isinstance(data, dict):
-            raise ValueError(f"Expected JSON root to be an object, got {type(data)}")
-        return data
+    def _load_json(self) -> dict:
+        return trips
 
     def list_trips(self, origin: str, destination: str) -> list[dict]:
         return self.trips
