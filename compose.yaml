@@ -18,12 +18,11 @@ x-tickets-common: &tickets-common
     - DEBUG="True"
     - ALLOWED_HOSTS=127.0.0.1,localhost,tickets.localhost
     - CSRF_TRUSTED_ORIGINS=https://tickets.localhost:8443
-    - POSTGRES_DB=postgres
+    - POSTGRES_DB=tickets-db
     - POFSTGRES_USER=postgres
-    - POSTGRES_PASSWORD=postgres
-    - POSTGRES_HOST=tickets-db
+    - POSTGRES_PASSWORD=Test123!
+    - POSTGRES_HOST=tickets-pad.postgres.database.azure.com
     - POSTGRES_PORT=5432
-    - DEPOT_API_URL=http://depot-service:8000/api
     - TREASURY_API_URL=http://treasury-api:8001/api
     - TREASURY_API_KEY=treasury-key
 
