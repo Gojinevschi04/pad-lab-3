@@ -3,7 +3,7 @@ trigger:
 
 variables:
   # Variabile locale care folosesc Build ID ca tag unic
-  imageRepository: 'TicketsPAD'
+  imageRepository: 'ticketspad'
   imageTag: '$(Build.BuildId)'
 
 # =======================================================
@@ -105,9 +105,9 @@ stages:
               find .
             displayName: Debug Full Repo
 
-          - script: |
-              docker login $(ACR_NAME).azurecr.io -u $(SP_APP_ID) -p $(SP_PASSWORD)
-            displayName: Docker Login Debug
+          # - script: |
+          #     docker login $(ACR_NAME).azurecr.io -u $(SP_APP_ID) -p $(SP_PASSWORD)
+          #   displayName: Docker Login Debug
 
           # Pas 2: Build imaginea de PRODUCȚIE si Push in ACR
           - task: Docker@2
@@ -119,7 +119,7 @@ stages:
               tags: $(imageTag)
               buildContext: '.'
               arguments: '--target runtime'
-              containerRegistry: TicketsPAD
+              containerRegistry: TicketsPADRegistry
 
           # Pas 3: Actualizarea Azure Container App (Deployment) - RAMANE LA FEL
           - task: AzureCLI@2
