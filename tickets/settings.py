@@ -36,25 +36,6 @@ OAUTH2_REDIRECT_URL = env(
     "OAUTH2_REDIRECT_URL", default="http://localhost:8000/api/oauth2-redirect.html"
 )
 
-
-# Celery
-CELERY_BROKER_URL = env(
-    "CELERY_BROKER_URL", default="redis://localhost:6379/1"
-)  # to do - keep it redis://localhost:6379/1
-CELERY_RESULT_BACKEND = env(
-    "CELERY_RESULT_BACKEND",
-    default="redis://localhost:6379/1",
-)
-CELERY_ACCEPT_CONTENT = env.list("CELERY_ACCEPT_CONTENT", default=["json"])
-CELERY_TASK_SERIALIZER = env("CELERY_TASK_SERIALIZER", default="json")
-CELERY_RESULT_SERIALIZER = env("CELERY_RESULT_SERIALIZER", default="json")
-CELERY_TIMEZONE = env("CELERY_TIMEZONE", default="UTC")
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 300
-CELERY_TASK_SOFT_TIME_LIMIT = 180
-CELERY_WORKER_SEND_TASK_EVENTS = True
-
 # Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = env("EMAIL_HOST", default="smtp.gmail.com")

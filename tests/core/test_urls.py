@@ -8,12 +8,6 @@ from rest_framework import status
 @pytest.mark.django_db
 class TestTicketURLs:
     @pytest.fixture(autouse=True)
-    def mock_ticket_tasks(self):
-        with (patch("tickets.core.tasks.refund_ticket.delay") as mock_refund,):
-            yield {
-                "refund": mock_refund,
-            }
-
     def test_ticket_list_get(self, api_client, user):
         api_client.force_authenticate(user=user)
         url = reverse("tickets-core:ticket-list")
@@ -51,8 +45,6 @@ class TestTicketURLs:
         assert response.status_code in (status.HTTP_200_OK, status.HTTP_404_NOT_FOUND)
 
     @pytest.mark.django_db
-    @patch("tickets.core.tasks.generate_ticket_pdf.delay")
-    @patch("tickets.core.tasks.send_ticket_email.delay")
     def test_ticket_webhook_confirm_post(
         self, mock_send_email, mock_generate_pdf, api_client, user, reserved_ticket
     ):
@@ -70,7 +62,7 @@ class TestTicketURLs:
         mock_generate_pdf.assert_called_once_with(reserved_ticket.id)
         mock_send_email.assert_called_once_with(reserved_ticket.id)
 
-    def test_ticket_cancel_post(self, api_client, user, paid_ticket, mock_ticket_tasks):
+    def test_ticket_cancel_post(self, api_client, user, paid_ticket):
         api_client.force_authenticate(user=user)
         url = reverse("tickets-core:ticket-cancel", kwargs={"pk": paid_ticket.id})
         response = api_client.post(url)
@@ -79,8 +71,6 @@ class TestTicketURLs:
             status.HTTP_400_BAD_REQUEST,
             status.HTTP_404_NOT_FOUND,
         )
-
-        mock_ticket_tasks["refund"].assert_called_once_with(paid_ticket.id)
 
     def test_ticket_presigned_get(self, api_client, user, paid_ticket):
         api_client.force_authenticate(user=user)

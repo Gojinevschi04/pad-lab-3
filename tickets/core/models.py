@@ -111,12 +111,6 @@ class TicketManager(models.Manager):
         ticket.status = ticket.Status.RESERVED
         ticket.reserved_until = timezone.now() + timedelta(minutes=15)
         ticket.save()
-
-        from tickets.core.tasks import expire_ticket, send_ticket_payment
-
-        expire_ticket.apply_async((ticket.id,), eta=ticket.reserved_until)
-        send_ticket_payment.delay(ticket.id)
-
         return ticket
 
     def cancel_for_trip(self, trip_id):
@@ -133,15 +127,6 @@ class TicketManager(models.Manager):
 
         refund_ids = list(paid_queryset.values_list("id", flat=True))
         cancelled_ids = list(cancelled_queryset.values_list("id", flat=True))
-
-        if cancelled_ids:
-            from tickets.core.tasks import (
-                refund_cancelled_tickets,
-                send_trip_cancellation_emails,
-            )
-
-            refund_cancelled_tickets.delay(refund_ids)
-            send_trip_cancellation_emails.delay(cancelled_ids)
 
         return {
             "cancelled": list(cancelled_queryset.values("id", "status")),
@@ -240,11 +225,6 @@ class Ticket(models.Model):
                 f"Cannot cancel a ticket with status '{self.status}'."
             )
 
-        if self.status == self.Status.PAID:
-            from tickets.core.tasks import refund_ticket
-
-            refund_ticket.delay(self.id)
-
         self.status = self.Status.CANCELLED
         self.save()
 
@@ -257,8 +237,3 @@ class Ticket(models.Model):
         self.status = self.Status.PAID
         self.invoice_id = invoice_id
         self.save()
-
-        from tickets.core.tasks import generate_ticket_pdf, send_ticket_email
-
-        generate_ticket_pdf.delay(self.id)
-        send_ticket_email.delay(self.id)

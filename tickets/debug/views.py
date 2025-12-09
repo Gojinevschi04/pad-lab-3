@@ -12,11 +12,6 @@ from tickets.core.models import Ticket
 from tickets.core.permissions import IsTicketOwner
 from tickets.core.services.ticket_pdf_service import TicketPDFService
 from tickets.core.services.trip_reminder_service import TripReminderService
-from tickets.core.tasks import (
-    generate_ticket_pdf,
-    send_ticket_email,
-    send_trip_cancellation_email,
-)
 
 pdf_service = TicketPDFService()
 
@@ -35,7 +30,6 @@ class GenerateTicketPDFView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        generate_ticket_pdf.delay(ticket_id)
         return Response(
             {"status": "PDF generation task queued", "ticket_id": ticket_id},
         )
@@ -50,13 +44,11 @@ class TicketEmailViewSet(viewsets.ViewSet):
     @action(detail=True, methods=["post"], url_path="send-ticket-email")
     def send_ticket_email_action(self, request, pk=None):
         ticket = get_object_or_404(self.get_queryset(), pk=pk)
-        send_ticket_email.delay(ticket.id)
         return Response({"detail": "Ticket email sent."}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], url_path="send-cancellation-email")
     def send_cancellation_email_action(self, request, pk=None):
         ticket = get_object_or_404(self.get_queryset(), pk=pk)
-        send_trip_cancellation_email.delay(ticket.id)
         return Response(
             {"detail": "Trip cancellation email sent."}, status=status.HTTP_200_OK
         )

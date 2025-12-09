@@ -9,25 +9,6 @@ from tickets.core.models import Ticket
 
 User = get_user_model()
 
-
-@pytest.fixture(autouse=True)
-def mock_ticket_tasks():
-    with (
-        patch("tickets.core.tasks.refund_ticket.delay") as mock_refund,
-        patch("tickets.core.tasks.generate_ticket_pdf.delay") as mock_pdf,
-        patch("tickets.core.tasks.expire_ticket.apply_async") as mock_expire,
-        patch("tickets.core.tasks.send_ticket_payment.delay") as mock_payment,
-        patch("tickets.core.tasks.send_ticket_email.delay") as mock_email,
-    ):
-        yield {
-            "refund": mock_refund,
-            "pdf": mock_pdf,
-            "email": mock_email,
-            "expire": mock_expire,
-            "payment": mock_payment,
-        }
-
-
 @pytest.mark.django_db
 class TestTicketViews:
     def test_list_only_returns_user_tickets(
@@ -65,7 +46,7 @@ class TestTicketCreation:
         mock_backend.get_trip.return_value = raw_trip
         mocker.patch("tickets.core.views.get_depot_backend", return_value=mock_backend)
 
-    def test_create_ticket_success(self, auth_client, trip, mock_ticket_tasks):
+    def test_create_ticket_success(self, auth_client, trip):
         url = reverse("tickets-core:ticket-list")
         payload = {
             "trip_id": trip["id"],
@@ -81,9 +62,6 @@ class TestTicketCreation:
         assert response.data["seat_number"] == 1
         assert response.data["status"] == "reserved"
         assert "reserved_until" in response.data
-
-        mock_ticket_tasks["payment"].assert_called_once()
-        mock_ticket_tasks["expire"].assert_called_once()
 
     def test_create_ticket_invalid_trip_id_negative(self, auth_client, trip, mocker):
         url = reverse("tickets-core:ticket-list")
@@ -159,7 +137,7 @@ class TestTicketCreation:
 @pytest.mark.django_db
 class TestTicketConfirmation:
     def test_confirm_ticket_success(
-        self, auth_client, reserved_ticket, mock_ticket_tasks
+        self, auth_client, reserved_ticket
     ):
         url = reverse("tickets-core:ticket-confirm")
         payload = {"ticket_id": reserved_ticket.id, "invoice_id": "INV-123"}
@@ -172,9 +150,6 @@ class TestTicketConfirmation:
         reserved_ticket.refresh_from_db()
         assert reserved_ticket.status == Ticket.Status.PAID
         assert reserved_ticket.invoice_id == "INV-123"
-
-        mock_ticket_tasks["pdf"].assert_called_once_with(reserved_ticket.id)
-        mock_ticket_tasks["email"].assert_called_once_with(reserved_ticket.id)
 
     def test_confirm_ticket_invalid_ticket_id(self, auth_client):
         url = reverse("tickets-core:ticket-confirm")
@@ -242,15 +217,12 @@ class TestTicketCancellation:
     def test_cancel_paid_ticket_triggers_refund(
         self, auth_client, user, paid_ticket, mocker
     ):
-        mock_refund = mocker.patch("tickets.core.tasks.refund_ticket.delay")
-
         url = reverse("tickets-core:ticket-cancel", kwargs={"pk": paid_ticket.id})
         response = auth_client.post(url)
 
         assert response.status_code == 200
         assert response.data["status"] == Ticket.Status.CANCELLED
         assert response.data["message"] == "Ticket cancelled."
-        mock_refund.assert_called_once_with(paid_ticket.id)
 
     def test_cancel_invalid_status_ticket(self, auth_client, user, reserved_ticket):
         reserved_ticket.status = Ticket.Status.USED
