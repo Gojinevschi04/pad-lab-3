@@ -88,22 +88,6 @@ stages:
               inlineScript: |
                 # Comanda az acr login folosește conexiunea AzureRM pentru a te loga la ACR
                 az acr login --name $(ACR_NAME)
-
-          - script: |
-              echo "=== Current directory ==="
-              pwd
-              echo "=== Listing root ==="
-              ls -al
-              echo "=== Listing deployment ==="
-              ls -al deployment || echo "Nu exista deployment/"
-              echo "=== Listing deployment/docker ==="
-              ls -al deployment/docker || echo "Nu exista deployment/docker/"
-            displayName: Debug Paths
-
-          - script: |
-              echo "=== Full repo listing ==="
-              find .
-            displayName: Debug Full Repo
             
           # Pas 2: Build imaginea de PRODUCȚIE si Push in ACR
           - task: Docker@2
