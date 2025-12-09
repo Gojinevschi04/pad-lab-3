@@ -1,0 +1,135 @@
+trigger:
+- main # Declanșare automată la push pe branch-ul main
+
+variables:
+  # Variabile locale care folosesc Build ID ca tag unic
+  imageRepository: 'TicketsPAD'
+  imageTag: '$(Build.BuildId)'
+
+# =======================================================
+# STAGE 1: CI - BUILD AND RUN TESTS (Testarea Containerizata)
+# =======================================================
+stages:
+- stage: CI_BuildAndTest
+  displayName: 1. CI - Executa Testele Containerizate
+  jobs:
+
+  - job: RunTests
+    displayName: Django Container Tests
+    pool:
+      vmImage: 'ubuntu-latest' # Agentul pe care se rulează
+
+    steps:
+
+    - checkout: self
+      clean: true
+      fetchDepth: 0
+      path: TicketsPAD
+
+    # Pas 1: Instalam Docker Compose (necesar pentru a rula mediul de test)
+    - script: |
+        sudo apt-get update && sudo apt-get install -y docker-compose
+      displayName: Install Docker Compose
+
+    # Pas 2: Rulam serviciul 'tickets-test' din compose.yaml
+    # Acesta rulează testele Pytest în containerul dedicat.
+    - script: |
+        docker compose -f compose.yaml up --build --abort-on-container-exit tickets-test
+      displayName: Run Docker Compose Tests
+
+    # Pas 3: Publicam rezultatele testelor
+    - task: PublishTestResults@2
+      displayName: Publica Rezultatele Pytest
+      condition: succeededOrFailed() # Publică indiferent de succesul testelor
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'reports/pytest-report.xml'
+ # =======================================================
+# STAGE 2: CD - DEPLOYMENT
+# =======================================================
+- stage: CD_Deploy
+  displayName: 2. CD - Deploy in Azure
+  dependsOn: CI_BuildAndTest
+  condition: succeeded()
+
+  jobs:
+
+  - deployment: DeployToACA
+    displayName: Deployment in Container App
+    environment: 'production'
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # Pas 1: Conexiune Azure CLI (pentru a executa comenzi)
+          - task: AzureCLI@2
+            displayName: Azure Login Check
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: echo "Conectat la Azure."
+
+          # NOU PAS: Autentificare explicită în ACR folosind Azure CLI
+          - task: AzureCLI@2
+            displayName: Login to Azure Container Registry (ACR)
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Comanda az acr login folosește conexiunea AzureRM pentru a te loga la ACR
+                az acr login --name $(ACR_NAME)
+
+          - script: |
+              echo "=== Current directory ==="
+              pwd
+              echo "=== Listing root ==="
+              ls -al
+              echo "=== Listing deployment ==="
+              ls -al deployment || echo "Nu exista deployment/"
+              echo "=== Listing deployment/docker ==="
+              ls -al deployment/docker || echo "Nu exista deployment/docker/"
+            displayName: Debug Paths
+
+          - script: |
+              echo "=== Full repo listing ==="
+              find .
+            displayName: Debug Full Repo
+
+          # Pas 2: Build imaginea de PRODUCȚIE si Push in ACR
+          - task: Docker@2
+            displayName: Build & Push imaginea de runtime
+            inputs:
+              command: buildAndPush
+              repository: $(imageRepository)
+
+              # CORECȚIE CALE: Verifică dacă acest path este 100% corect
+              dockerfile: deployment/docker/Dockerfile
+
+              tags: $(imageTag)
+              buildContext: '.'
+
+              arguments: '--target runtime'
+
+          # Pas 3: Actualizarea Azure Container App (Deployment) - RAMANE LA FEL
+          - task: AzureCLI@2
+            displayName: Actualizeaza Azure Container App
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                FULL_IMAGE_NAME="$(ACR_NAME).azurecr.io/$(imageRepository):$(imageTag)"
+                
+                # Comanda de actualizare ACA (ACA)
+                az containerapp update \
+                  --name $(ACA_NAME) \
+                  --resource-group $(RESOURCE_GROUP) \
+                  --image $FULL_IMAGE_NAME \
+                  --yes
+                
+                echo "Deployment finalizat. Imaginea: $FULL_IMAGE_NAME"
