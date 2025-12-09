@@ -16,8 +16,8 @@ x-tickets-common: &tickets-common
     - DJANGO_SUPERUSER_PASSWORD=admin
     - PYTHONPATH=/app
     - DEBUG="True"
-    - ALLOWED_HOSTS=127.0.0.1,localhost,tickets.localhost
-    - CSRF_TRUSTED_ORIGINS=https://tickets.localhost:8443
+    - ALLOWED_HOSTS=*
+    - CSRF_TRUSTED_ORIGINS=*
     - POSTGRES_DB=tickets-db
     - POSTGRES_USER=postgres
     - POSTGRES_PASSWORD=Test123!
