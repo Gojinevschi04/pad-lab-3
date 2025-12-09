@@ -19,7 +19,7 @@ x-tickets-common: &tickets-common
     - ALLOWED_HOSTS=127.0.0.1,localhost,tickets.localhost
     - CSRF_TRUSTED_ORIGINS=https://tickets.localhost:8443
     - POSTGRES_DB=tickets-db
-    - POFSTGRES_USER=postgres
+    - POSTGRES_USER=postgres
     - POSTGRES_PASSWORD=Test123!
     - POSTGRES_HOST=tickets-pad.postgres.database.azure.com
     - POSTGRES_PORT=5432
