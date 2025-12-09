@@ -4,12 +4,14 @@ from pathlib import Path
 from django.conf import settings
 
 from tickets.depot.backends.base import BaseBackend
+from tickets.depot.backends.client import DepotClient
 from tickets.depot.utils import generate_seat_status
 
 
 class JsonDepotBackend(BaseBackend):
-    def __init__(self, file_path: str = "trips.json"):
+    def __init__(self, client: DepotClient, file_path: str = "trips.json"):
         super().__init__()
+        self.client = client
         self.file_path = Path(settings.BASE_DIR) / file_path
         self.data = self._load_json(self.file_path)
 
