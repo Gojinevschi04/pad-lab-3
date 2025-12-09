@@ -105,20 +105,21 @@ stages:
               find .
             displayName: Debug Full Repo
 
+          - script: |
+              docker login $(ACR_NAME).azurecr.io -u $(SP_APP_ID) -p $(SP_PASSWORD)
+            displayName: Docker Login Debug
+
           # Pas 2: Build imaginea de PRODUCȚIE si Push in ACR
           - task: Docker@2
             displayName: Build & Push imaginea de runtime
             inputs:
               command: buildAndPush
               repository: $(imageRepository)
-
-              # CORECȚIE CALE: Verifică dacă acest path este 100% corect
               dockerfile: deployment/docker/Dockerfile
-
               tags: $(imageTag)
               buildContext: '.'
-
               arguments: '--target runtime'
+              containerRegistry: TicketsPAD
 
           # Pas 3: Actualizarea Azure Container App (Deployment) - RAMANE LA FEL
           - task: AzureCLI@2
