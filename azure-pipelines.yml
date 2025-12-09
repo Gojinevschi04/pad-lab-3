@@ -64,6 +64,11 @@ stages:
       runOnce:
         deploy:
           steps:
+
+          - checkout: self
+            clean: true
+            fetchDepth: 0
+            
           # Pas 1: Conexiune Azure CLI (pentru a executa comenzi)
           - task: AzureCLI@2
             displayName: Azure Login Check
