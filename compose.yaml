@@ -2,6 +2,7 @@ x-tickets-common: &tickets-common
   build:
     context: .
     dockerfile: deployment/docker/Dockerfile
+
   networks:
     - public
     - backend
